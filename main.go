@@ -33,39 +33,15 @@ func getData(dev *hid.Device) error {
 }
 
 func decode(buf []byte) {
-	res := make([]byte, 8)
 
-	var c byte
-	for _, n := range [][]int{{0, 2}, {1, 4}, {3, 7}, {5, 6}} {
-		c = buf[n[0]]
-		buf[n[0]] = buf[n[1]]
-		buf[n[1]] = c
-	}
-
-	var tmp = buf[7] << 5
-	res[7] = (buf[6] << 5) | (buf[7] >> 3)
-	res[6] = (buf[5] << 5) | (buf[6] >> 3)
-	res[5] = (buf[4] << 5) | (buf[5] >> 3)
-	res[4] = (buf[3] << 5) | (buf[4] >> 3)
-	res[3] = (buf[2] << 5) | (buf[3] >> 3)
-	res[2] = (buf[1] << 5) | (buf[2] >> 3)
-	res[1] = (buf[0] << 5) | (buf[1] >> 3)
-	res[0] = tmp | (buf[0] >> 3)
-
-	var magicWord = []byte("Htemp99e")
-
-	for i := 0; i < 8; i++ {
-		res[i] -= (magicWord[i] << 4) | (magicWord[i] >> 4)
-	}
-
-	if res[3] != res[0]+res[1]+res[2] {
+	if buf[3] != buf[0]+buf[1]+buf[2] {
 		return
 	}
 
 	var w uint16
-	w = uint16(res[1])*256 + uint16(res[2])
+	w = uint16(buf[1])*256 + uint16(buf[2])
 
-	switch res[0] {
+	switch buf[0] {
 	case 0x42:
 		temperature = float32(w)*0.0625 - 273.15
 	case 0x50:
